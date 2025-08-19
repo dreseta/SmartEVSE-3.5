@@ -2949,6 +2949,8 @@ extern void Timer20ms(void * parameter);
         3,              // Task priority - medium
         NULL            // Task handle
     );
+    
+    Serial.begin(115200); // Dodaj na začetek setupa, če še ni
 
     WiFiSetup();
 

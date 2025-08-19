@@ -61,7 +61,7 @@ uint32_t serialnr;
 
 
 // The following data will be updated by eeprom/storage data at powerup:
-uint8_t WIFImode = WIFI_MODE;                                               // WiFi Mode (0:Disabled / 1:Enabled / 2:Start Portal)
+uint8_t WIFImode = 1;                                               // WiFi Mode (0:Disabled / 1:Enabled / 2:Start Portal)
 char SmartConfigKey[] = "0123456789abcdef";                                 // SmartConfig / EspTouch AES key, used to encyrypt the WiFi password.
 String TZinfo = "";                                                         // contains POSIX time string
 
@@ -1514,6 +1514,26 @@ void WiFiSetup(void) {
     //WiFi.persistent(true);
     WiFi.onEvent(onWifiEvent);
 
+    WIFImode = 1;
+
+    Serial.begin(115200); // Dodaj na začetek setupa, če še ni
+    Serial.println("WiFi setup starting...");
+    WiFi.mode(WIFI_STA);
+    WiFi.begin("TVOJ_WIFI_IME", "TVOJE_GESLO");
+    Serial.println("Connecting to WiFi...");
+    int tries = 0;
+    while (WiFi.status() != WL_CONNECTED && tries < 20) {
+        delay(500);
+        Serial.print(".");
+        tries++;
+    }
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.println("\nWiFi connected!");
+        Serial.print("IP address: ");
+        Serial.println(WiFi.localIP());
+    } else {
+        Serial.println("\nWiFi NOT connected!");
+    }
     // Init and get the time
     // First option to get time from local ntp server blocks the second fallback option since 2021:
     // See https://github.com/espressif/arduino-esp32/issues/4964
