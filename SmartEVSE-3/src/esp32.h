@@ -33,34 +33,34 @@
 
 // Pin definitions left side ESP32
 #define PIN_TEMP 36
-#define PIN_CP_IN 39
-#define PIN_PP_IN 34
-#define PIN_LOCK_IN 35
-#define PIN_SSR 32
-#define PIN_LCD_SDO_B3 33                                                       // = SPI_MOSI
-#define PIN_LCD_CLK 26                                                          // = SPI_SCK
-#define PIN_SSR2 27
-#define PIN_LCD_LED 14
-#define PIN_LEDB 12
-#define PIN_RCM_FAULT_V30 13 //TODO ok for v4?
+#define PIN_CP_IN 35    // 39->35
+#define PIN_PP_IN 32    //34->32        
+#define PIN_LOCK_IN 8       //35->8
+#define PIN_SSR 16          //32->16
+#define PIN_LCD_SDO_B3 17   //33->17                                                       // = SPI_MOSI
+#define PIN_LCD_CLK 37      //                                                             // = SPI_SCK
+#define PIN_SSR2 100
+#define PIN_LCD_LED 101
+#define PIN_LEDB 102
+#define PIN_RCM_FAULT_V30 6 //13->6            TODO ok for v4?
 
 // Pin definitions right side ESP32
-#define PIN_RS485_RX_V30 23
-#define PIN_RS485_DIR 22
+#define PIN_RS485_RX_V30 41   //23->41
+#define PIN_RS485_DIR 22 //todo
 //#define PIN_RXD 
 //#define PIN_TXD
-#define PIN_RS485_TX 21
-#define PIN_CP_OUT 19
-#define PIN_ACTB_V30 18
-#define PIN_ACTA_V30 17
-#define PIN_SW_IN_V30 16
-#define PIN_LEDG 4
+#define PIN_RS485_TX 38 
+#define PIN_CP_OUT 13 //19-> 13
+#define PIN_ACTB_V30 103
+#define PIN_ACTA_V30 104
+#define PIN_SW_IN_V30 9
+#define PIN_LEDG 105
 #define PIN_IO0_B1 0
-#define PIN_LEDR 2
-#define PIN_CPOFF 15
+#define PIN_LEDR 106
+#define PIN_CPOFF 107
 
 #if SMARTEVSE_VERSION >=30 && SMARTEVSE_VERSION < 40
-#define PIN_LCD_A0_B2 25
+#define PIN_LCD_A0_B2 18        //25->18
 #define PIN_LCD_RST 5
 #define SPI_MOSI 33                                                             // SPI connections to LCD
 #define SPI_MISO -1
@@ -73,19 +73,21 @@
 #define BLUE_CHANNEL 4
 #define LCD_CHANNEL 5                                                           // LED Backlight LCD
 #else
-#define PIN_LCD_A0_B2 40
-#define PIN_LCD_RST 42
+
+#define PIN_LCD_A0_B2 18
+#define PIN_LCD_RST 108
 #include "funconfig.h"
 #endif //SMARTEVSE_VERSION
 
 //extra pin definitions for v3.1
-#define PIN_RCM_FAULT_V31 38
-#define PIN_ACTA_V31 10
-#define PIN_ACTB_V31 9
-#define PIN_SW_IN_V31 23
-#define PIN_RS485_RX_V31 37
-#define PIN_EXT_V31 13
-#define PIN_BUZZER_V31 18
+
+#define PIN_RCM_FAULT_V31 6
+#define PIN_ACTA_V31 109
+#define PIN_ACTB_V31 110
+#define PIN_SW_IN_V31 111
+#define PIN_RS485_RX_V31 41
+#define PIN_EXT_V31 112
+#define PIN_BUZZER_V31 113
 
 #define _RSTB_0 digitalWrite(PIN_LCD_RST, LOW);
 #define _RSTB_1 digitalWrite(PIN_LCD_RST, HIGH);
