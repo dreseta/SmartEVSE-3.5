@@ -7,6 +7,10 @@
 	<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
 	<script src="https://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
 
+
+  <!--graph-->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <!-- Required meta tags -->
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -56,6 +60,185 @@
       let last_evse_state_id=0;
 
       $(document).ready(loadData());
+
+      let powerData = [];
+      let powerLabels = [];
+      let powerChart = null;
+
+      function updateChart() {
+        if (!powerChart) {
+          const ctx = document.getElementById('powerChart').getContext('2d');
+          powerChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: powerLabels,
+              datasets: [{
+                label: 'Moč (kW)',
+                data: powerData,
+                borderColor: 'rgba(75,192,192,1)',
+                backgroundColor: 'rgba(75,192,192,0.2)',
+                fill: true,
+                pointRadius: 0
+              }]
+            },
+            options: {
+              scales: {
+                x: {
+                  title: { display: true, text: 't [h]' },
+                  suggestedMin: 0,
+                  suggestedMax: 24
+                },
+                y: { title: { display: true, text: 'p [kW]' } }
+              }
+            }
+          });
+        } else {
+          powerChart.data.labels = powerLabels;
+          powerChart.data.datasets[0].data = powerData;
+          powerChart.update();
+        }
+      }
+
+      //all phases day graph
+      let powerPhasesLabels = [];
+      let powerPhasesL1 = [];
+      let powerPhasesL2 = [];
+      let powerPhasesL3 = [];
+      let powerPhasesChart = null;
+
+      function updatePhasesChart() {
+        if (!powerPhasesChart) {
+          const ctx = document.getElementById('powerPhasesChart').getContext('2d');
+          powerPhasesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: powerPhasesLabels,
+              datasets: [
+                {
+                  label: 'L1 (kW)',
+                  data: powerPhasesL1,
+                  borderColor: 'rgba(255,0,0,1)',
+                  backgroundColor: 'rgba(255,0,0,0.1)',
+                  fill: false,
+                  pointRadius: 0
+                },
+                {
+                  label: 'L2 (kW)',
+                  data: powerPhasesL2,
+                  borderColor: 'rgba(0,255,0,1)',
+                  backgroundColor: 'rgba(0,255,0,0.1)',
+                  fill: false,
+                  pointRadius: 0
+                },
+                {
+                  label: 'L3 (kW)',
+                  data: powerPhasesL3,
+                  borderColor: 'rgba(0,0,255,1)',
+                  backgroundColor: 'rgba(0,0,255,0.1)',
+                  fill: false,
+                  pointRadius: 0
+                }
+              ]
+            },
+            options: {
+              scales: {
+                x: { title: { display: true, text: 't [h]' } },
+                y: { title: { display: true, text: 'p [kW]' } }
+              }
+            }
+          });
+        } else {
+          powerPhasesChart.data.labels = powerPhasesLabels;
+          powerPhasesChart.data.datasets[0].data = powerPhasesL1;
+          powerPhasesChart.data.datasets[1].data = powerPhasesL2;
+          powerPhasesChart.data.datasets[2].data = powerPhasesL3;
+          powerPhasesChart.update();
+        }
+      }
+
+      let evPowerData = [];      // podatki za EV Power
+      let evPowerLabels = [];    // časovne oznake za EV Power
+      let evPowerChart = null;
+
+      function updateEvPowerChart() {
+        if (!evPowerChart) {
+          const ctx = document.getElementById('evPowerChart').getContext('2d');
+          evPowerChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: evPowerLabels,
+              datasets: [{
+                label: 'EV Power (kW)',
+                data: evPowerData,
+                borderColor: 'rgba(255,193,7,1)',
+                backgroundColor: 'rgba(255,193,7,0.2)',
+                fill: true,
+                pointRadius: 0
+              }]
+            },
+            options: {
+              scales: {
+                x: { title: { display: true, text: 't [h]' } },
+                y: { title: { display: true, text: 'p [kW]' } }
+              }
+            }
+          });
+        } else {
+          evPowerChart.data.labels = evPowerLabels;
+          evPowerChart.data.datasets[0].data = evPowerData;
+          evPowerChart.update();
+        }
+      }
+
+      let powerDayLabels = [];
+      let powerDayData = [];
+      let powerDayChart = null;
+
+      function updateDayChart() {
+          if (!powerDayChart) {
+            const ctx = document.getElementById('powerDayChart').getContext('2d');
+            powerDayChart = new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: powerDayLabels,
+                datasets: [{
+                  label: 'Moč danes (kW)',
+                  data: powerDayData,
+                  borderColor: 'rgba(255,99,132,1)',
+                  backgroundColor: 'rgba(255,99,132,0.2)',
+                  fill: true,
+                  pointRadius: 0
+                }]
+              },
+              options: {
+              scales: {
+                x: {
+                  title: { display: true, text: 't [h]' },
+                  ticks: {
+                    callback: function(value, index, ticks) {
+                      // Prikaži le ure na vsake 2 uri, brez :00
+                      const label = this.getLabelForValue(value);
+                      if (label && label.endsWith(':00')) {
+                        const hour = parseInt(label.split(':')[0], 10);
+                        return hour % 2 === 0 ? hour.toString() : '';
+                      }
+                      return '';
+                    },
+                    autoSkip: false,
+                    maxRotation: 70,
+                    minRotation: 0
+                  }
+                },
+                y: { title: { display: true, text: 'p [kW]' } }
+              }
+            }
+            });
+          } else {
+            powerDayChart.data.labels = powerDayLabels;
+            powerDayChart.data.datasets[0].data = powerDayData;
+            powerDayChart.update();
+          }
+        }
 
 
       function loadData(){
@@ -365,6 +548,61 @@
             } else {
               $('[id=ocpp_config_outer]').hide();
             }
+
+            let voltage = 230; 
+            let total_power = voltage * (
+              data.phase_currents.L1/10 +
+              data.phase_currents.L2/10 +
+              data.phase_currents.L3/10
+            ); 
+
+            $('#phase_total_power').text((total_power/1000).toFixed(2) + " kW");
+
+
+            // Dodaj podatke za graf
+            let now = new Date();
+            let timeLabel = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            powerLabels.push(timeLabel);
+            powerData.push((total_power/1000).toFixed(2));
+
+            // Ohrani samo zadnjih 24 ur (ali 288 točk za 5-min interval)
+            if (powerLabels.length > 10) {
+              powerLabels.shift();
+              powerData.shift();
+            }
+            // Dodaj podatke za vsako fazo
+            powerPhasesLabels.push(timeLabel);
+            powerPhasesL1.push((voltage * (data.phase_currents.L1/10) / 1000).toFixed(2));
+            powerPhasesL2.push((voltage * (data.phase_currents.L2/10) / 1000).toFixed(2));
+            powerPhasesL3.push((voltage * (data.phase_currents.L3/10) / 1000).toFixed(2));
+
+            // Ohrani samo zadnjih 10 točk
+            if (powerPhasesLabels.length > 10) {
+              powerPhasesLabels.shift();
+              powerPhasesL1.shift();
+              powerPhasesL2.shift();
+              powerPhasesL3.shift();
+            }
+            
+            // Dodaj podatke za EV Power graf
+            evPowerLabels.push(new Date().toLocaleTimeString()); // ali drug časovni podatek
+            evPowerData.push(data.ev_meter.import_active_power); // ali drug podatek
+
+            // Omeji število točk (zadnjih 10)
+            if (evPowerLabels.length > 10) {
+              evPowerLabels.shift();
+              evPowerData.shift();
+            }
+
+            if (data.power_day) {
+              powerDayLabels = data.power_day.map(item => item.time);
+              powerDayData = data.power_day.map(item => item.power);
+              updateDayChart();
+            }
+
+            updateEvPowerChart();
+            updatePhasesChart();
+            updateChart();
 
             setTimeout("loadData()", 5000);
           });
@@ -776,6 +1014,14 @@
                                 <div class="col mr-2">
                                     <div class="text-xl font-weight-bold text-info text-uppercase mb-1">Mains Phase Details</div>
                                     <div class="row no-gutters align-items-center">
+                                        <div class="col-auto h5 mb-0 mr-3 font-weight-bold text-gray-800" style="width: 100px;">
+                                            Power:
+                                          </div>
+                                          <div class="col">
+                                            <div class="h5 mb-0 mr-3 text-gray-800" id="phase_total_power" style="text-align: right;"></div>
+                                          </div>
+                                    </div>
+                                    <div class="row no-gutters align-items-center">
                                       <div class="col-auto h5 mb-0 mr-3 font-weight-bold text-gray-800" style="width: 100px;">
                                           Total:
                                         </div>
@@ -822,6 +1068,24 @@
                                         <div class="col">
                                           <div class="h5 mb-0 mr-3 text-gray-800" id="p1_data_time" style="text-align: right;"></div>
                                         </div>
+                                    </div>                            
+                                    <div class="card border-left-info shadow h-100 py-2" style="margin-bottom: 20px;">
+                                      <div class="card-body">
+                                        <div class="text-xl font-weight-bold text-info text-uppercase mb-1">Trenutna moč</div>
+                                        <canvas id="powerChart" width="400" height="200"></canvas>
+                                      </div>
+                                    </div>
+                                    <div class="card border-left-info shadow h-100 py-2" style="margin-bottom: 20px;">
+                                      <div class="card-body">
+                                        <div class="text-xl font-weight-bold text-info text-uppercase mb-1">Trenutna moč po fazah</div>
+                                        <canvas id="powerPhasesChart" width="400" height="200"></canvas>
+                                      </div>
+                                    </div>
+                                    <div class="card border-left-info shadow h-100 py-2" style="margin-bottom: 20px;">
+                                      <div class="card-body">
+                                        <div class="text-xl font-weight-bold text-info text-uppercase mb-1">Moč danes</div>
+                                        <canvas id="powerDayChart" width="400" height="200"></canvas>
+                                      </div>
                                     </div>
                                 </div>
                                 <div class="col-auto">
@@ -925,6 +1189,11 @@
                                     </div>
                                     <div class="col">
                                       <div class="h5 mb-0 mr-3 text-gray-800" id="evmeter_charged_kwh" style="text-align: right;"></div>
+                                    </div>
+                                </div>
+                                <div class="row no-gutters align-items-center">
+                                    <div class="col-12">
+                                      <canvas id="evPowerChart" width="400" height="200"></canvas>
                                     </div>
                                 </div>
                             </div>

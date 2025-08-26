@@ -89,6 +89,7 @@ SPIClass LCD_SPI2(HSPI);
 // Shut down ESP to conserve the power we have left. RTC will automatically store powerdown timestamp
 // We can store some important data in flash storage or the RTC chip (2 bytes)
 //
+
 void PowerPanicESP() {
 
     _LOG_D("Power Panic!\n");
@@ -112,6 +113,7 @@ void PowerPanicESP() {
 }
 
 extern void SendConfigToCH32(void);
+
 #endif //SMARTEVSE_VERSION
 
 #if SMARTEVSE_VERSION >=30 && SMARTEVSE_VERSION < 40
@@ -448,6 +450,49 @@ const char * getErrorNameWeb(uint8_t ErrorCode) {
     if(count < 9) return StrErrorNameWeb[count];
     else return "Multiple Errors";
 }
+
+//graph 
+struct PowerDaySample {
+  uint8_t hour;
+  uint8_t minute;
+  float power; // v kW
+};
+
+
+PowerDaySample powerDay[DAY_POINTS];
+int powerDayIndex = 0;
+int lastDay = -1;
+unsigned long lastDayReset = 0;
+
+void initPowerDayBuffer() {
+  for (int i = 0; i < DAY_POINTS; i++) {
+    powerDay[i].hour = (i * 15) / 60;
+    powerDay[i].minute = (i * 15) % 60;
+    powerDay[i].power = 0.0;
+  }
+  powerDayIndex = 0;
+}
+
+void addPowerDaySample(float power) {
+  time_t now = time(NULL);
+  struct tm *tm_info = localtime(&now);
+
+  // Resetiraj buffer ob polnoči
+  if (lastDay != tm_info->tm_mday) {
+    initPowerDayBuffer();
+    lastDay = tm_info->tm_mday;
+  }
+
+  // Zapiši, če je trenutna minuta deljiva z 15 (npr. 11:30:00 do 11:30:59)
+  if (tm_info->tm_min % 15 == 0) {
+    int idx = tm_info->tm_hour * 4 + tm_info->tm_min / 15;
+    if (idx >= 0 && idx < DAY_POINTS) {
+      powerDay[idx].power = power;
+    }
+  }
+}
+
+unsigned long lastPowerDaySample = 0;
 
 
 void getButtonState() {
@@ -1298,7 +1343,7 @@ bool handle_URI(struct mg_connection *c, struct mg_http_message *hm,  webServerR
 
         boolean evConnected = pilot != PILOT_12V;                    //when access bit = 1, p.ex. in OFF mode, the STATEs are no longer updated
 
-        DynamicJsonDocument doc(3072); // https://arduinojson.org/v6/assistant/
+        DynamicJsonDocument doc(7000); // https://arduinojson.org/v6/assistant/
         doc["version"] = String(VERSION);
         doc["serialnr"] = serialnr;
         doc["mode"] = mode;
@@ -1446,7 +1491,7 @@ bool handle_URI(struct mg_connection *c, struct mg_http_message *hm,  webServerR
         doc["phase_currents"]["original_data"]["TOTAL"] = IrmsOriginal[0] + IrmsOriginal[1] + IrmsOriginal[2];
         doc["phase_currents"]["original_data"]["L1"] = IrmsOriginal[0];
         doc["phase_currents"]["original_data"]["L2"] = IrmsOriginal[1];
-        doc["phase_currents"]["original_data"]["L3"] = IrmsOriginal[2];
+        doc["phase_currents"]["original_data"]["L3"] = IrmsOriginal[2];   
         
         doc["backlight"]["timer"] = BacklightTimer;
         doc["backlight"]["status"] = backlight;
@@ -1467,6 +1512,15 @@ bool handle_URI(struct mg_connection *c, struct mg_http_message *hm,  webServerR
         doc["color"]["custom"]["G"] = ColorCustom[1];
         doc["color"]["custom"]["B"] = ColorCustom[2];
 
+        JsonArray dayHistory = doc.createNestedArray("power_day");
+        for (int i = 0; i < DAY_POINTS; i++) {
+                JsonObject sample = dayHistory.createNestedObject();
+                char buf[9];
+                sprintf(buf, "%02d:%02d", powerDay[i].hour, powerDay[i].minute);
+                sample["time"] = String(buf);
+                sample["power"] = powerDay[i].power;        
+                }   
+                
         String json;
         serializeJson(doc, json);
         mg_http_reply(c, 200, "Content-Type: application/json\r\n", "%s\n", json.c_str());    // Yes. Respond JSON
@@ -3039,6 +3093,17 @@ void loop() {
     static unsigned long lastCheck = 0;
     if (millis() - lastCheck >= 1000) {
         lastCheck = millis();
+
+        if (millis() - lastPowerDaySample > 25 * 1000) { // every 
+            lastPowerDaySample = millis();
+            float voltage = 230.0;
+            float l1 = voltage * (MainsMeter.Irms[0]/10.0) / 1000.0;
+            float l2 = voltage * (MainsMeter.Irms[1]/10.0) / 1000.0;
+            float l3 = voltage * (MainsMeter.Irms[2]/10.0) / 1000.0;
+            float total_power = l1 + l2 + l3;
+            addPowerDaySample(total_power); // skupni graf
+        }
+
         //this block is for non-time critical stuff that needs to run approx 1 / second
 #if !defined(SMARTEVSE_VERSION) || SMARTEVSE_VERSION >=30 && SMARTEVSE_VERSION < 40 //not on ESP32 v4
         //printStatus:

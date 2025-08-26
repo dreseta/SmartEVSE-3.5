@@ -61,7 +61,7 @@ uint32_t serialnr;
 
 
 // The following data will be updated by eeprom/storage data at powerup:
-uint8_t WIFImode = 1;                                               // WiFi Mode (0:Disabled / 1:Enabled / 2:Start Portal)
+uint8_t WIFImode = WIFI_MODE;                                               // WiFi Mode (0:Disabled / 1:Enabled / 2:Start Portal)
 char SmartConfigKey[] = "0123456789abcdef";                                 // SmartConfig / EspTouch AES key, used to encyrypt the WiFi password.
 String TZinfo = "";                                                         // contains POSIX time string
 
@@ -69,7 +69,7 @@ char *downloadUrl = NULL;
 int downloadProgress = 0;
 int downloadSize = 0;
 
-static uint8_t CliState = 0;
+static uint8_t CliState = 4;
 #ifdef SENSORBOX_VERSION
 void ProvisionCli(HardwareSerial &s) {
 //void ProvisionCli(HardwareSerial &s = &Serial) {
@@ -117,7 +117,7 @@ void ProvisionCli(HWCDC &s = Serial) {
     } else if (CliState == 4) {
         s.println("WiFi credentials stored.");
         WiFi.mode(WIFI_STA);                // Set Station Mode
-        WiFi.begin(Router_SSID, Router_Pass);   // Configure Wifi with credentials
+        WiFi.begin("Spitakdrive", "Spitak750k");   // Configure Wifi with credentials
         CliState++;
     }
 
